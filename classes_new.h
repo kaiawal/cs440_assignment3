@@ -89,11 +89,20 @@ public:
             offset += serialized.size();
         }
 
-        // TO_DO: Put a delimiter here to indicate slot directory starts from here 
+        // TO_DO: Put a delimiter here to indicate slot directory starts from here
+        const char delimiter[] = "$";
+        memcpy(page_data + offset, delimiter, sizeof(delimiter));
+        offset += sizeof(delimiter);
+
+        int num_slots = slot_directory.size();
+        memcpy(page_data + offset, &num_slots, sizeof(num_slots));
+        offset += sizeof(num_slots);
 
         for (const auto& slots : slot_directory) { // TO_DO: Write the slot-directory information into page_data. You'll use slot-directory to retrieve record(s).
-
-
+            memcpy(page_data + offset, &slots.first, sizeof(&slots.first));
+            offset += sizeof(&slots.first);
+            memcpy(page_data + offset, &slots.second, sizeof(&slots.second));
+            offset += sizeof(&slots.second);
         }
         
         out.write(page_data, sizeof(page_data)); // Write the page_data to the EmployeeRelation.dat file 
