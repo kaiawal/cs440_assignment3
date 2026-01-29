@@ -47,6 +47,7 @@ public:
         oss.write(name.c_str(), name.size()); // writes the name in binary form
         oss.write(reinterpret_cast<const char*>(&bio_len), sizeof(bio_len)); // // Writes the size of the Bio in binary format. 
         oss.write(bio.c_str(), bio.size()); // writes bio in binary form
+        return oss.str();
     }
 };
 
@@ -91,8 +92,8 @@ public:
         }
 
         // TO_DO: Put a delimiter here to indicate slot directory starts from here
-        const char delimiter[] = "$";
-        memcpy(page_data + offset, delimiter, sizeof(delimiter));
+        const char delimiter = '$';
+        memcpy(page_data + offset, &delimiter, sizeof(delimiter));
         offset += sizeof(delimiter);
 
         int num_slots = slot_directory.size();
@@ -100,9 +101,9 @@ public:
         offset += sizeof(num_slots);
 
         for (const auto& slots : slot_directory) { // TO_DO: Write the slot-directory information into page_data. You'll use slot-directory to retrieve record(s).
-            memcpy(page_data + offset, &slots.first, sizeof(&slots.first));
+            memcpy(page_data + offset, &slots.first, sizeof(slots.first));
             offset += sizeof(&slots.first);
-            memcpy(page_data + offset, &slots.second, sizeof(&slots.second));
+            memcpy(page_data + offset, &slots.second, sizeof(slots.second));
             offset += sizeof(&slots.second);
         }
         
@@ -111,7 +112,7 @@ public:
     }
 
     // Read a page from a binary input stream, i.e., EmployeeRelation.dat file to populate a page object
-    bool read_from_data_file(istream& in) {
+    bool read_from_data_file(istream& in, Record* found_record, int search_id) {
         char page_data[4096] = {0}; // Character array used to read 4 KB from the data file to your main memory. 
         in.read(page_data, 4096); // Read a page of 4 KB from the data file 
 
@@ -136,6 +137,24 @@ public:
                 memcpy(&slot1, loc, sizeof(int));
                 memcpy(&slot2, loc, sizeof(int));
                 slot_directory.push_back({slot1, slot2});
+            }
+
+            loc = &page_data[0];
+            for(int i; i < directory_size; i++){
+                vector<std::string> fields;
+                memcpy(&fields[0], loc, sizeof(int));
+                memcpy(&fields[1], loc, sizeof(int));
+                int name_size = 0;
+                memcpy(&name_size, loc, sizeof(int));
+                memcpy(&fields[2], loc, name_size);
+                int bio_size = 0;
+                memcpy(&bio_size, loc, sizeof(int));
+                memcpy(&fields[3], loc, bio_size);
+                Record record = Record(fields);
+
+                if(stoi(fields[0]) == search_id){
+                    found_record = &record;
+                }
             }
 
             return true;
