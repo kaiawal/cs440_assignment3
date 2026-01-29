@@ -241,9 +241,14 @@ public:
         int page_number = 0;
         Record* found_record = NULL;
         while(buffer[page_number].read_from_data_file(data_file, found_record, searchId)){
-            
+            if (found_record != NULL) {
+                found_record->print();
+                break;
+            }
         }
         // TO_DO: Print "Record not found" if no records match.
-
+        if (found_record == NULL) {
+            cout << "Record not found" << endl;
+        }
     }
 };
