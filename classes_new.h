@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <bitset>
+#include <algorithm> 
 using namespace std; // Include the standard namespace
 
 class Record {
@@ -120,6 +121,22 @@ public:
             
             // TO_DO: You may process page_data (4 KB page) and put the information to the records and slot_directory (main memory).
             // TO_DO: You may modify this function to process the search for employee ID in the page you just loaded to main memory.
+            char* loc = find(page_data, page_data + 4096, '$');
+            if (loc == page_data + 4096) {
+                return false;
+            }
+
+            loc += sizeof(char);
+            int directory_size = 0;
+            memcpy(&directory_size, loc, sizeof(int));
+
+            int slot1 = 0;
+            int slot2 = 0;
+            for (int i = 0; i < directory_size; i++) {
+                memcpy(&slot1, loc, sizeof(int));
+                memcpy(&slot2, loc, sizeof(int));
+                slot_directory.push_back({slot1, slot2});
+            }
 
             return true;
         }
