@@ -66,7 +66,7 @@ public:
             records.push_back(r); // Record stored in current page
             cur_size += r.get_size(); // Updating page size
 
-            // TO_DO: update slot directory information
+            slot_directory.push_back({cur_size - r.get_size(), r.get_size()});
 
             return true;
         }
