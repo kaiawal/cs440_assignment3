@@ -239,8 +239,9 @@ public:
 
         // TO_DO: Read pages from your data file (using read_from_data_file) and search for the employee ID in those pages. Be mindful of the page limit in main memory.        
         int page_number = 0;
-        while(buffer[page_number].read_from_data_file(data_file)){
-        
+        Record* found_record = NULL;
+        while(buffer[page_number].read_from_data_file(data_file, found_record, searchId)){
+            
         }
         // TO_DO: Print "Record not found" if no records match.
 
