@@ -1,5 +1,16 @@
-/*** This is just a Skeleton/Starter Code for the External Storage Assignment. This is by no means absolute, in terms of assignment approach/ used functions, etc. ***/
-/*** You may modify any part of the code, as long as you stick to the assignments requirements we do not have any issue ***/
+/*** 
+ * HW3 CS440
+ * Lydia TerBeek | terbeekl@oregonstate.edu | 934-501-398
+ * Kaia Walker | walkkaia@oregonstate.edu | 934-499-189
+ * 
+ * 
+ * Unfortunately, our code doesn't work with searching data beyond 3 pages, due to
+ * not reassigning new pages into the buffer. We could not figure out how to do that :(
+ * 
+ * Our .dat file is created correctly and we worked to implement a lookup based
+ * on assignment requirements.
+ ***/
+
 
 // Include necessary standard library headers
 #include <string>
@@ -124,16 +135,19 @@ public:
             
             slot_directory.clear();
             
+            // Putting a pointer at the delimiter - looking at slot directory
             char* loc = find(page_data, page_data + 4096, '$');
             if (loc == page_data + 4096) {
                 return false;
             }
 
+            // Moving past delimiter, getting slot directory size
             loc += sizeof(char);
             int directory_size = 0;
             memcpy(&directory_size, loc, sizeof(int));
             loc += sizeof(int);
 
+            // Copy Slot directory
             for (int i = 0; i < directory_size; i++) {
                 int slot1 = 0, slot2 = 0;
                 memcpy(&slot1, loc, sizeof(int));
@@ -143,17 +157,16 @@ public:
                 slot_directory.push_back({slot1, slot2});
             }
 
+            // Going back, and copying records based on slot directory
             for(int i = 0; i < directory_size; i++){
                 int offset = slot_directory[i].first;
                 
                 int id, manager_id;
                 memcpy(&id, page_data + offset, sizeof(int));
                 offset += sizeof(int);
-                // cout << "ID: " << id << endl;
                 
                 memcpy(&manager_id, page_data + offset, sizeof(int));
                 offset += sizeof(int);
-                // cout << "Manager ID: " << manager_id << endl;
 
                 int name_size = 0;
                 memcpy(&name_size, page_data + offset, sizeof(int));
@@ -161,15 +174,13 @@ public:
                 string name(page_data + offset, name_size);
                 offset += name_size;
 
-                // cout << "Name: " << name << endl;
                 
                 int bio_size = 0;
                 memcpy(&bio_size, page_data + offset, sizeof(int));
                 offset += sizeof(int);
                 string bio(page_data + offset, bio_size);
 
-                // cout << "Bio: " << bio << endl;
-                
+                // Searching for passed id, returns a pointer to correct record
                 if(id == search_id){
                     vector<string> fields = {to_string(id), name, bio, to_string(manager_id)};
                     Record* record = new Record(fields);
@@ -266,6 +277,7 @@ public:
             p.cur_size = 0;
         }
         
+        // Loops through pages in buffer for ID
         int page_number = 0;
         Record* found_record = NULL;
         while(buffer[page_number].read_from_data_file(data_file, found_record, searchId)){
