@@ -102,13 +102,12 @@ public:
 
         for (const auto& slots : slot_directory) { // TO_DO: Write the slot-directory information into page_data. You'll use slot-directory to retrieve record(s).
             memcpy(page_data + offset, &slots.first, sizeof(slots.first));
-            offset += sizeof(&slots.first);
+            offset += sizeof(slots.first);
             memcpy(page_data + offset, &slots.second, sizeof(slots.second));
-            offset += sizeof(&slots.second);
+            offset += sizeof(slots.second);
         }
         
         out.write(page_data, sizeof(page_data)); // Write the page_data to the EmployeeRelation.dat file 
-
     }
 
     // Read a page from a binary input stream, i.e., EmployeeRelation.dat file to populate a page object
@@ -130,30 +129,42 @@ public:
             loc += sizeof(char);
             int directory_size = 0;
             memcpy(&directory_size, loc, sizeof(int));
+            loc += sizeof(int);
 
-            int slot1 = 0;
-            int slot2 = 0;
             for (int i = 0; i < directory_size; i++) {
+                int slot1 = 0, slot2 = 0;
                 memcpy(&slot1, loc, sizeof(int));
+                loc += sizeof(int);
                 memcpy(&slot2, loc, sizeof(int));
+                loc += sizeof(int);
                 slot_directory.push_back({slot1, slot2});
             }
 
-            loc = &page_data[0];
-            for(int i; i < directory_size; i++){
-                vector<std::string> fields;
-                memcpy(&fields[0], loc, sizeof(int));
-                memcpy(&fields[1], loc, sizeof(int));
+            for(int i = 0; i < directory_size; i++){
+                int offset = slot_directory[i].first;
+                
+                int id, manager_id;
+                memcpy(&id, page_data + offset, sizeof(int));
+                offset += sizeof(int);
+                memcpy(&manager_id, page_data + offset, sizeof(int));
+                offset += sizeof(int);
+                
                 int name_size = 0;
-                memcpy(&name_size, loc, sizeof(int));
-                memcpy(&fields[2], loc, name_size);
+                memcpy(&name_size, page_data + offset, sizeof(int));
+                offset += sizeof(int);
+                string name(page_data + offset, name_size);
+                offset += name_size;
+                
                 int bio_size = 0;
-                memcpy(&bio_size, loc, sizeof(int));
-                memcpy(&fields[3], loc, bio_size);
-                Record record = Record(fields);
-
-                if(stoi(fields[0]) == search_id){
-                    found_record = &record;
+                memcpy(&bio_size, page_data + offset, sizeof(int));
+                offset += sizeof(int);
+                string bio(page_data + offset, bio_size);
+                
+                if(id == search_id){
+                    vector<string> fields = {to_string(id), name, bio, to_string(manager_id)};
+                    Record* record = new Record(fields);
+                    found_record = record;
+                    return true;
                 }
             }
 
@@ -210,7 +221,6 @@ public:
                 fields.push_back(item);
             }
             Record r = Record(fields);  //create a record object            
-
             
             if (!buffer[page_number].insert_record_into_page(r)) { // inserting that record object to the current page
                 
