@@ -32,7 +32,7 @@ public:
     }
 
     int get_size(){ // Returns size of the record
-        return int(sizeof(int) * 2 + bio.length() + name.length());
+        return int(sizeof(int) * 4 + bio.length() + name.length());
     }
     
     // Take a look at Figure 9.9 and read the Section 9.7.2 [Record Organization for Variable Length Records]
@@ -121,6 +121,9 @@ public:
             
             // TO_DO: You may process page_data (4 KB page) and put the information to the records and slot_directory (main memory).
             // TO_DO: You may modify this function to process the search for employee ID in the page you just loaded to main memory.
+            
+            slot_directory.clear();
+            
             char* loc = find(page_data, page_data + 4096, '$');
             if (loc == page_data + 4096) {
                 return false;
@@ -146,19 +149,26 @@ public:
                 int id, manager_id;
                 memcpy(&id, page_data + offset, sizeof(int));
                 offset += sizeof(int);
+                // cout << "ID: " << id << endl;
+                
                 memcpy(&manager_id, page_data + offset, sizeof(int));
                 offset += sizeof(int);
-                
+                // cout << "Manager ID: " << manager_id << endl;
+
                 int name_size = 0;
                 memcpy(&name_size, page_data + offset, sizeof(int));
                 offset += sizeof(int);
                 string name(page_data + offset, name_size);
                 offset += name_size;
+
+                // cout << "Name: " << name << endl;
                 
                 int bio_size = 0;
                 memcpy(&bio_size, page_data + offset, sizeof(int));
                 offset += sizeof(int);
                 string bio(page_data + offset, bio_size);
+
+                // cout << "Bio: " << bio << endl;
                 
                 if(id == search_id){
                     vector<string> fields = {to_string(id), name, bio, to_string(manager_id)};
