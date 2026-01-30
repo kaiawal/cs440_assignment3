@@ -111,7 +111,7 @@ public:
     }
 
     // Read a page from a binary input stream, i.e., EmployeeRelation.dat file to populate a page object
-    bool read_from_data_file(istream& in, Record* found_record, int search_id) {
+    bool read_from_data_file(istream& in, Record*& found_record, int search_id) {
         char page_data[4096] = {0}; // Character array used to read 4 KB from the data file to your main memory. 
         in.read(page_data, 4096); // Read a page of 4 KB from the data file 
 
@@ -258,11 +258,23 @@ public:
         data_file.seekg(0, ios::beg);  // Rewind the data_file to the beginning for reading
 
         // TO_DO: Read pages from your data file (using read_from_data_file) and search for the employee ID in those pages. Be mindful of the page limit in main memory.        
+        
+        // Clear buffer pages before reading
+        for (page& p : buffer) {
+            p.records.clear();
+            p.slot_directory.clear();
+            p.cur_size = 0;
+        }
+        
         int page_number = 0;
         Record* found_record = NULL;
         while(buffer[page_number].read_from_data_file(data_file, found_record, searchId)){
             if (found_record != NULL) {
                 found_record->print();
+                break;
+            }
+            page_number++;
+            if (page_number >= buffer.size()) {
                 break;
             }
         }
